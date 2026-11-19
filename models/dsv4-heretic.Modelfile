@@ -1,0 +1,27 @@
+# Athena's chat model; any other Ollama app can use it too.
+# DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic (Apache-2.0), imatrix Q6_K.
+#
+# The GGUF ships a broken chat template (user turns lose their <|im_start|>user
+# header and <think> is a stop token), so use Ollama's built-in Qwen3.5
+# renderer/parser instead: same qwen35 architecture as the stock qwen3.5:9b,
+# and it makes think:false work.
+#
+#   ollama create dsv4-heretic -f models/dsv4-heretic.Modelfile
+
+FROM hf.co/mradermacher/DeepSeek-V4-Pro-Qwen3.5-9B-UNCENSORED-heretic-i1-GGUF:i1-Q6_K
+
+TEMPLATE {{ .Prompt }}
+RENDERER qwen3.5
+PARSER qwen3.5
+
+# Distills of DeepSeek can loop or run past the end of turn without explicit stops.
+PARAMETER stop <|im_end|>
+PARAMETER stop <|endoftext|>
+PARAMETER stop <|im_start|>
+
+# Settings from the hybrid's deployment guide: room for reasoning, low drift.
+PARAMETER num_ctx 16384
+PARAMETER temperature 0.6
+PARAMETER top_p 0.95
+PARAMETER top_k 20
+PARAMETER repeat_penalty 1.08
